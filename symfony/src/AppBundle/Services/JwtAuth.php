@@ -9,6 +9,7 @@ class JwtAuth{
     public $key;
 
     public function __construct($manager){
+        //le asignamos el valor que nos llega por parámetro del servicio
         $this->manager = $manager;
         $this->key='holasoylaclave555666';
     }
@@ -74,7 +75,7 @@ class JwtAuth{
         try{
           $decoded = JWT::decode($jwt, $this->key, array('HS256'));
         }catch(\UnexpectedValueException $e){
-            $auth = false;
+            $auth = true;
         }catch(\DomainException $e){
             $auth = false;
         }

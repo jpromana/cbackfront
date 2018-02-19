@@ -3,15 +3,17 @@ namespace AppBundle\Services; /*definimos el namespace para que el
                               framework sepa dónde está ubicada esta clase*/
 
 class Helpers{
-    /*Define variable*/
+        
+    //Define variable
     public $manager;
 
-    /*Definimos el constructor.Le pasamos el parámetro manager*/
+    //Definimos el constructor.Le pasamos el parámetro manager
     public function __construct($manager){
         $this->manager = $manager;
 
     }
-
+    
+    //método que se va a encargar de convertir la información a json
     public function json($data){
         $normalizers = array(new \Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer());
         $encoders = array("json" => new \Symfony\Component\Serializer\Encoder\JsonEncoder());
@@ -19,7 +21,7 @@ class Helpers{
         $serializer = new \Symfony\Component\Serializer\Serializer($normalizers, $encoders);
         $json = $serializer->serialize($data, 'json');
 
-        $response = new \Symfony\Component\HttpFoundation\Response();/*ESto hace una respuesta http*/
+        $response = new \Symfony\Component\HttpFoundation\Response();//ESto hace una respuesta http
         $response->setContent($json);
         $response->headers->set('Content-Type', 'application/json');
 
