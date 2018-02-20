@@ -10,8 +10,9 @@ use AppBundle\Services\JwtAuth;
 
 
 class TaskController extends Controller{
-
-    public function newAction(Request $request){
+    //desde la URL nos llega el id, es el que le añadimos como parámetro al método
+    //Se utilizará para comprobar si es una modificación/edición. Por defecto, va a ser null.
+    public function newAction(Request $request, $id = null){
       //comprobamos si el token que nos llega es correcto
       //cargamos el servicio de helpers
       $helpers = $this->get(Helpers::class);
@@ -45,26 +46,68 @@ class TaskController extends Controller{
             $user = $em->getRepository('BackendBundle:User')->findOneBy(array(
               "id" => $user_id
             ));
+            //Validamos el parámetro $id, para saber si es una inserción o edición. Si es null
+            //será una inserción
+            if($id == null){
+              //Montamos un objeto de tarea
+              $task = new Task();
+              $task->setUser($user);
+              $task->setTitle($title);
+              $task->setDescription($description);
+              $task->setStatus($status);
+              $task->setCreatedAt($createdAt);
+              $task->setUpdatedAt($updatedAt);
 
-            //Montamos un objeto de tarea
-            $task = new Task();
-            $task->setUser($user);
-            $task->setTitle($title);
-            $task->setDescription($description);
-            $task->setStatus($status);
-            $task->setCreatedAt($createdAt);
-            $task->setUpdatedAt($updatedAt);
+              //persistimos los datos en el orm
+              $em->persist($task);
+              $em->flush();
 
-            //persistimos los datos en el orm
-            $em->persist($task);
-            $em->flush();
+              //devolvemos la información
+              $data = array(
+                'status' => 'success',
+                'code'   => 200,
+                'data'    => $task  //data se convertirá luego a json
+              );              
+            }else{
+              //realizamos la búsqueda.
+              $task = $em->getRepository('BackendBundle:Task')->findOneBy(array(
+                "id" => $id
+              ));
+              //comprobamos si existe la identidad del usuario logueado
+              //si el id del usuario logueado es igual al id del usuario dueño de esta tarea
+              //podremos editarla.
+              if(isset($identity->sub) && $identity->sub == $task->getUser()->getId
+                ()){
+                //tendremos una tarea con todos los setters disponibles.
+                $task->setTitle($title);
+                $task->setDescription($description);
+                $task->setStatus($status);
+                $task->setUpdatedAt($updatedAt);  
 
-            //devolvemos la información
-            $data = array(
-              'status' => 'success',
-              'code'   => 200,
-              'data'    => $task  //data se convertirá luego a json
-            );
+                //persistimos los datos en el orm
+                $em->persist($task);
+                $em->flush();
+
+                //devolvemos la información
+                $data = array(
+                  'status' => 'success',
+                  'code'   => 200,
+                  'data'    => $task
+                );
+                
+              }else{
+                //no coincide usuario logueado con el usuario de la tarea, no se tiene permisos
+                //para editarla.
+                $data = array(
+                  'status' => 'error',
+                  'code'   => 400,
+                  'msg'    => 'Task updated error, you not owner!'
+                );
+                                  
+              }
+            }
+
+
           }else{
             $data = array(
               'status' => 'error',
