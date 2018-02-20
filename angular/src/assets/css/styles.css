@@ -1,0 +1,12 @@
+#logo {
+    height: 35px;
+    margin-top: -10px;
+}
+
+#header{
+  margin-top: 15px;
+}
+
+.no-padding{
+  padding-left: 0px;
+}

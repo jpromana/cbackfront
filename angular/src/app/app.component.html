@@ -1,0 +1,69 @@
+<!--Layout global de nuestra web-->
+
+<!--
+Creamos cabecera y menú
+-->
+<header id="header">
+  <div class="navbar navbar-default">
+    <div class="navbar-header">
+      <!--Botón de desplegar menú responsive-->
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+              data-target="#menu" aria-extended="false">
+        <span class="sr-only">Toggle</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <!-- LOGO -->
+      <a class="navbar-brand" [routerLink]="['/']">
+        <img src="./assets/img/acept.png" id="logo" />
+      </a>
+    </div>
+    <div class="collapse navbar-collapse" id="menu">
+      <ul class="nav navbar-nav">
+        <li>
+          <a [routerLink]="['/']">
+            <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+            Home
+          </a>
+        </li>
+
+        <li>
+          <a [routerLink]="['/']">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            Crear tarea
+          </a>
+        </li>
+
+        <li>
+          <a [routerLink]="['/']">
+            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+            Ajustes
+          </a>
+        </li>
+
+        <li>
+          <a [routerLink]="['/']">
+            <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+            Salir
+          </a>
+        </li>
+
+      </ul>
+
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+          <a [routerLink]="['/login']">Acceder</a>
+
+        </li>
+        <li>
+          <a [routerLink]="['/register']">Registro</a>
+
+        </li>
+
+      </ul>
+    </div>
+
+  </div>
+  <router-outlet></router-outlet>
+  
