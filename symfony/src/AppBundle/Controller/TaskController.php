@@ -107,7 +107,6 @@ class TaskController extends Controller{
               }
             }
 
-
           }else{
             $data = array(
               'status' => 'error',
@@ -137,4 +136,240 @@ class TaskController extends Controller{
       
       return $helpers->json($data);
     }
-}
+
+    public function tasksAction(Request $request){
+      //comprobamos si el token que nos llega es correcto
+      //cargamos el servicio de helpers
+      $helpers = $this->get(Helpers::class);
+      $jwt_auth = $this->get(JwtAuth::class);
+
+      $token = $request->get('authorization', null);
+      $authCheck = $jwt_auth->checkToken($token);
+
+      if($authCheck){
+        //guardamos la tarea
+        $identity = $jwt_auth->checkToken($token, true);
+
+        $em = $this->getDoctrine()->getManager();
+
+        $dql = "SELECT t FROM BackendBundle:Task t WHERE t.user = {$identity->sub} ORDER BY t.id DESC";
+        $query = $em->createQuery($dql);
+        //usamos el paginador y le pasamos esta consulta.
+        //recogemos los parámetros get de la url        
+        $page = $request->query->getInt('page', 1);
+        $paginator = $this->get('knp_paginator');
+        $items_per_page = 10;
+
+        $pagination = $paginator->paginate($query, $page, $items_per_page);
+        $total_items_count = $pagination->getTotalItemCount();
+
+        //Ya tenemos toda la información recopilada, ahora la devolvemos en el array
+        $data = array(
+          'status' => 'success',
+          'code'   => 200,
+          'total_items_count'   => $total_items_count,
+          'page_actual'         => $page,
+          'items_per_page'      => $items_per_page,
+          'total_pages'         => ceil($total_items_count / $items_per_page), //calcula el número de páginas y lo redondea con ceil
+          'data'                => $pagination //muestra los datos de 10 en 10
+        );
+        
+      }else{
+        $data = array(
+          'status' => 'error',
+          'code'   => 400,
+          'msg'    => 'Authorization no valid'
+        );      
+
+      }
+      return $helpers->json($data);
+    }
+    public function taskAction(Request $request, $id = null){
+      //comprobamos si el token que nos llega es correcto
+      //cargamos el servicio de helpers
+      $helpers = $this->get(Helpers::class);
+      $jwt_auth = $this->get(JwtAuth::class);
+
+      $token = $request->get('authorization', null);
+      $authCheck = $jwt_auth->checkToken($token);
+
+      if($authCheck){
+        //si la auntenticación es correcta
+        $identity = $jwt_auth->checkToken($token, true);
+        
+        $em = $this->getDoctrine()->getManager();
+
+        $task = $em->getRepository('BackendBundle:Task')->findOneBy(array(
+          "id" => $id
+        ));
+
+
+        if($task && is_object($task) && $identity->sub == $task->getUser()->getId()){
+          $data = array(
+            'status' => 'success',
+            'code'   => 200,
+            'data'    => $task
+          );  
+        }else{
+          $data = array(
+            'status' => 'error',
+            'code'   => 404,
+            'msg'    => 'Task not found'
+          );  
+        }
+        
+      }else{
+        $data = array(
+          'status' => 'error',
+          'code'   => 400,
+          'msg'    => 'Authorization no valid'
+        );              
+      }
+      //codificamos el array a un json
+      return $helpers->json($data);
+    }
+
+    public function searchAction(Request $request, $search = null){
+      //comprobamos si el token que nos llega es correcto
+      //cargamos el servicio de helpers
+      $helpers = $this->get(Helpers::class);
+      $jwt_auth = $this->get(JwtAuth::class);
+
+      $token = $request->get('authorization', null);
+      $authCheck = $jwt_auth->checkToken($token);
+
+      if($authCheck){
+        //si la auntenticación es correcta
+        $identity = $jwt_auth->checkToken($token, true);
+        
+        //para hacer la consulta
+        $em = $this->getDoctrine()->getManager();
+
+        //Filtro, variable que nos llegará por post
+        $filter = $request->get('filter', null);
+        if(empty($filter)){
+          $filter = null;
+        }elseif($filter == 1){
+          $filter = 'new';
+        }elseif($filter == 2){
+          $filter = 'todo';
+        }else{
+          $filter = 'finished';
+        }
+
+        //Orden
+        $order = $request->get('order', null);
+        if(empty($order) || $order == 2){
+          $order = 'DESC';
+        }else{
+          $order = 'ASC';
+        }
+
+        //Hacemos la búsqueda en sí
+        if($search != null){
+          $dql = "SELECT t FROM BackendBundle:Task t "
+                 ."WHERE t.user = $identity->sub AND "
+                 ."(t.title LIKE :search OR t.description LIKE :search) ";
+
+        }else{
+          $dql = "SELECT t FROM BackendBundle:Task t "
+                ."WHERE t.user = $identity->sub";
+          
+        }
+        
+        //añadimos filtro
+        if($filter != null){
+          $dql .= " AND t.status = :filter";
+        }
+
+        // Set order
+        $dql .= " ORDER BY t.id $order";
+        
+        //created query
+        $query = $em->createQuery($dql);
+        
+        //Set parameter filter
+        if($filter != null){
+          $query->setParameter('filter', "$filter");
+        }
+
+        //parámetro de búsqueda
+        if(!empty($search)){
+          $query->setParameter('search', "%$search%");
+        }
+        
+        $tasks = $query->getResult();
+
+        //retornamos el array con los datos
+        $data = array(
+          'status' => 'success',
+          'code'   => 200,
+          'data'    => $tasks
+        );
+        
+      }else{
+        $data = array(
+          'status' => 'error',
+          'code'   => 400,
+          'msg'    => 'Authorization no valid'
+        );
+      }
+      return $helpers->json($data);
+    }
+
+    
+    public function removeAction(Request $request, $id = null){
+      //comprobamos si el token que nos llega es correcto
+      //cargamos el servicio de helpers
+      $helpers = $this->get(Helpers::class);
+      $jwt_auth = $this->get(JwtAuth::class);
+
+      //obtener y comprobar el token  
+      $token = $request->get('authorization', null);
+      $authCheck = $jwt_auth->checkToken($token);
+
+      if($authCheck){
+        //si la auntenticación es correcta
+        $identity = $jwt_auth->checkToken($token, true);
+        
+        $em = $this->getDoctrine()->getManager();
+
+        //busca la tarea en base al id que recibe por la url
+        $task = $em->getRepository('BackendBundle:Task')->findOneBy(array(
+          "id" => $id
+        ));
+
+        if($task && is_object($task) && $identity->sub == $task->getUser()->getId()){
+          //recibimos la tarea y la eliminamos
+          $em->remove($task); //de esta manera se está persistiendo la eliminación de ese objeto
+          
+          //ahora efectuamos este cambio en la base de datos
+          $em->flush();          
+
+          $data = array(
+            'status' => 'success',
+            'code'   => 200,
+            'data'    => $task
+          );  
+        }else{
+          $data = array(
+            'status' => 'error',
+            'code'   => 404,
+            'msg'    => 'Task not found'
+          );  
+        }
+        
+      }else{
+        $data = array(
+          'status' => 'error',
+          'code'   => 400,
+          'msg'    => 'Authorization no valid'
+        );              
+      }
+      //codificamos el array a un json
+      return $helpers->json($data);
+    }
+
+
+
+  }
