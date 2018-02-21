@@ -1,5 +1,11 @@
 <div class="col-md-12">
     <h3>{{ title }}</h3>
+
+  <div class="identity-alert alert alert-success" *ngIf="identity &&  identity.sub">
+     ¡Te has identificado correctamente! Bienvenid@ {{identity.email}}
+  </div>
+
+
     <form #loginForm="ngForm" (ngSubmit)="onSubmit()" class="col-md-7 no-padding">
       <p>
         <label>Email:</label>

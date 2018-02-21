@@ -11,21 +11,21 @@ export class UserService{
   public identity;
   public token;
 
-  constructor(private http: Http) {
+  constructor(private _http: Http) {
     this.url = GLOBAL.url;
 
   }
 
-  signup(user_to_login){
+  //usamos signup para loguearnos
+  signup(user_to_login){    
     /*Hacemos una petición ajax a nuestros métodos del API a la 
       URL que acaba en login*/
+    
     let json = JSON.stringify(user_to_login);
     let params = "json="+json;
     let headers = new Headers({'Content-Type':'application/x-www-form-urlencoded'});
     
     return this._http.post(this.url+'/login', params, {headers: headers})
-      .map(res => res.json());
-    
-    //return "Hola desde el servicio angular";
+      .map(res => res.json());  
   }  
 }
