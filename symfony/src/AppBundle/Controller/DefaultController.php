@@ -36,7 +36,7 @@ class DefaultController extends Controller
 
         //si el json es distinto de null hacemos el login
         if($json != null){
-            //convertimos un json a un array de PHP 
+            //convertimos un json a un objeto de PHP 
             $params = json_decode($json);
 
             $email = (isset($params->email)) ? $params->email : null;

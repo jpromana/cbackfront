@@ -43,6 +43,7 @@ export class LoginComponent implements OnInit{
         this._userService.signup(this.user).subscribe(
             response => {
                 this.identity = response; //guardamos la respuesta que es el objeto de usuario loguedo
+
                 if(this.identity.length <= 1){
                     console.log('Error en el servidor'); //Esto es cuando no nos devuelve bien el API
                 }{
@@ -52,7 +53,7 @@ export class LoginComponent implements OnInit{
                       //logueado, que está en un objeto que se llama también identity
                      localStorage.setItem('identity', JSON.stringify(this.identity));
 
-                     //conseguimos el token
+                     //GET TOKEN conseguimos el token
                      this.user.getHash = null;
                      this._userService.signup(this.user).subscribe(
                         response => {
